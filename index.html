@@ -732,11 +732,9 @@ async function renderAdminUsers() {
     // Update summary stats
     const totalGen = users.reduce((s,u) => s + (u.aiGenerated||0), 0);
     const totalApp = users.reduce((s,u) => s + (u.aiApplied||0), 0);
-    const avgRate  = totalGen > 0 ? Math.round((totalApp/totalGen)*100) : 0;
     document.getElementById('admin-total-users').textContent     = users.length;
     document.getElementById('admin-total-generated').textContent = totalGen;
     document.getElementById('admin-total-applied').textContent   = totalApp;
-    document.getElementById('admin-avg-rate').textContent        = avgRate + '%';
 
     tbody.innerHTML = users.map(u => `
       <tr>
