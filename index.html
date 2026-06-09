@@ -722,15 +722,9 @@ async function renderAdminUsers() {
     const result = await adminAPI({ action: 'getUsers' });
     const users = result.users || [];
 
-    // Fetch job applied counts from each user's sheet
-    const userCounts = await Promise.allSettled(
-      users.map(u => u.scriptUrl
-        ? jobsAPI(u.scriptUrl, { action: 'getJobs' }).then(r => ({ id: u.id, applied: r.counts?.applied || 0 })).catch(() => ({ id: u.id, applied: 0 }))
-        : Promise.resolve({ id: u.id, applied: 0 })
-      )
-    );
+    // Use aiApplied from admin sheet directly
     const countMap = {};
-    userCounts.forEach(r => { if (r.status === 'fulfilled') countMap[r.value.id] = r.value.applied; });
+    users.forEach(u => { countMap[u.id] = u.aiApplied || 0; });
     if (!users.length) {
       tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">No users yet</td></tr>';
       return;
