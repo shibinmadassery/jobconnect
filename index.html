@@ -444,6 +444,29 @@ header {
 
   <div class="main">
     <div class="admin-title">👥 User Management</div>
+
+    <!-- AI Stats Summary -->
+    <div class="admin-section" id="admin-ai-stats" style="margin-bottom:20px">
+      <h3>✨ AI Apply Overview</h3>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px" id="admin-stats-grid">
+        <div style="text-align:center;padding:16px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">
+          <div style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--ink)" id="admin-total-users">0</div>
+          <div style="font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-top:2px">Total Users</div>
+        </div>
+        <div style="text-align:center;padding:16px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">
+          <div style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--gold)" id="admin-total-generated">0</div>
+          <div style="font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-top:2px">Total Generated</div>
+        </div>
+        <div style="text-align:center;padding:16px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">
+          <div style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--green)" id="admin-total-applied">0</div>
+          <div style="font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-top:2px">Total Applied</div>
+        </div>
+        <div style="text-align:center;padding:16px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">
+          <div style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--blue)" id="admin-avg-rate">0%</div>
+          <div style="font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-top:2px">Avg Apply Rate</div>
+        </div>
+      </div>
+    </div>
     <div class="admin-section" id="admin-url-section">
       <h3>🔗 Admin Sheet Connection</h3>
       <div class="inline-form">
@@ -494,6 +517,8 @@ header {
             <th>Username</th>
             <th>Location</th>
             <th>Jobs Sheet</th>
+            <th>✨ Generated</th>
+            <th>✅ Applied</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -699,12 +724,27 @@ async function renderAdminUsers() {
       tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">No users yet</td></tr>';
       return;
     }
+    // Update summary stats
+    const totalGen = users.reduce((s,u) => s + (u.aiGenerated||0), 0);
+    const totalApp = users.reduce((s,u) => s + (u.aiApplied||0), 0);
+    const avgRate  = totalGen > 0 ? Math.round((totalApp/totalGen)*100) : 0;
+    document.getElementById('admin-total-users').textContent     = users.length;
+    document.getElementById('admin-total-generated').textContent = totalGen;
+    document.getElementById('admin-total-applied').textContent   = totalApp;
+    document.getElementById('admin-avg-rate').textContent        = avgRate + '%';
+
     tbody.innerHTML = users.map(u => `
       <tr>
         <td><strong>${esc(u.name)}</strong></td>
         <td><code style="background:var(--bg);padding:2px 6px;border-radius:4px;font-size:0.78rem">${esc(u.username)}</code></td>
         <td>${esc(u.location || '—')}</td>
         <td>${u.scriptUrl ? `<span style="color:var(--green);font-size:0.75rem">✅ Connected</span>` : `<span style="color:var(--muted);font-size:0.75rem">Not set</span>`}</td>
+        <td style="text-align:center">
+          <span style="font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:var(--gold)">${u.aiGenerated || 0}</span>
+        </td>
+        <td style="text-align:center">
+          <span style="font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:var(--green)">${u.aiApplied || 0}</span>
+        </td>
         <td><button class="btn-del" onclick="deleteUser('${esc(u.id)}','${esc(u.name)}')">Remove</button></td>
       </tr>
     `).join('');
