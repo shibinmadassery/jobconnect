@@ -588,8 +588,11 @@ async function doLogin() {
       try { document.getElementById('profile-role').value     = result.role_     || ''; } catch(e) {}
       try { document.getElementById('profile-script').value   = result.scriptUrl || ''; } catch(e) {}
       try { document.getElementById('profile-cv').value       = result.cvUrl     || ''; } catch(e) {}
-      currentUser.cvUrl = result.cvUrl || '';
+      currentUser.cvUrl        = result.cvUrl        || '';
+      currentUser.aiGenerated  = result.aiGenerated  || 0;
+      currentUser.aiApplied    = result.aiApplied    || 0;
       showScreen('dashboard');
+      loadAiStats();
       if (result.scriptUrl) fetchJobs();
       else { showToast('⚙️', 'Add your Apps Script URL in Profile'); setLoading(false); }
     }
@@ -965,15 +968,41 @@ function showToast(icon, msg) {
 // ══════════════════════════════════
 // AI HELPER
 // ══════════════════════════════════
-let aiStats = JSON.parse(localStorage.getItem('jc_ai_stats') || '{"generated":0,"applied":0}');
+let aiStats = { generated: 0, applied: 0 };
+
+function loadAiStats() {
+  // Load from server data first, fallback to localStorage
+  const key = 'jc_ai_stats_' + (currentUser?.id || 'guest');
+  const local = JSON.parse(localStorage.getItem(key) || '{"generated":0,"applied":0}');
+  aiStats = {
+    generated: currentUser.aiGenerated || local.generated || 0,
+    applied:   currentUser.aiApplied   || local.applied   || 0
+  };
+  updateAiStatsUI();
+}
 let selectedJobForAI = null;
 
-function saveAiStats() {
-  localStorage.setItem('jc_ai_stats', JSON.stringify(aiStats));
-  document.getElementById('stat-generated').textContent = aiStats.generated;
+function updateAiStatsUI() {
+  document.getElementById('stat-generated').textContent  = aiStats.generated;
   document.getElementById('stat-ai-applied').textContent = aiStats.applied;
   const rate = aiStats.generated > 0 ? Math.round((aiStats.applied / aiStats.generated) * 100) : 0;
   document.getElementById('stat-rate').textContent = rate + '%';
+}
+
+function saveAiStats() {
+  // Save to localStorage
+  const key = 'jc_ai_stats_' + (currentUser?.id || 'guest');
+  localStorage.setItem(key, JSON.stringify(aiStats));
+  updateAiStatsUI();
+  // Sync to Google Sheets in background
+  if (currentUser?.id) {
+    adminAPI({
+      action:    'updateAiStats',
+      id:        currentUser.id,
+      generated: aiStats.generated,
+      applied:   aiStats.applied
+    }).catch(() => {}); // silent fail — localStorage is backup
+  }
 }
 
 function populateJobSelect() {
