@@ -616,6 +616,8 @@ async function doLogin() {
       currentUser.cvUrl        = result.cvUrl        || '';
       currentUser.aiGenerated  = result.aiGenerated  || 0;
       currentUser.aiApplied    = result.aiApplied    || 0;
+      // Save session to localStorage
+      localStorage.setItem('jc_session', JSON.stringify(currentUser));
       showScreen('dashboard');
       loadAiStats();
       if (result.scriptUrl) fetchJobs();
@@ -653,6 +655,7 @@ function saveAdminUrl() {
 function doLogout() {
   currentUser = null;
   jobs = [];
+  localStorage.removeItem('jc_session');
   document.getElementById('login-user').value = '';
   document.getElementById('login-pass').value = '';
   showScreen('login');
