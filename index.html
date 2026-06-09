@@ -1032,19 +1032,19 @@ function updateAiStatsUI() {
   document.getElementById('stat-rate').textContent = rate + '%';
 }
 
-function saveAiStats() {
-  // Save to localStorage
+function saveAiStats(syncToSheet = false) {
+  // Save to localStorage always
   const key = 'jc_ai_stats_' + (currentUser?.id || 'guest');
   localStorage.setItem(key, JSON.stringify(aiStats));
   updateAiStatsUI();
-  // Sync to Google Sheets in background
-  if (currentUser?.id) {
+  // Only sync to Google Sheets when explicitly requested (after real action)
+  if (syncToSheet && currentUser?.id) {
     adminAPI({
       action:    'updateAiStats',
       id:        currentUser.id,
       generated: aiStats.generated,
       applied:   aiStats.applied
-    }).catch(() => {}); // silent fail — localStorage is backup
+    }).catch(() => {});
   }
 }
 
@@ -1160,7 +1160,7 @@ Instructions:
     jobLink.style.display = selectedJobForAI.url ? 'inline-flex' : 'none';
 
     aiStats.generated++;
-    saveAiStats();
+    saveAiStats(true); // sync to sheet
     showToast('✨', 'Cover letter generated!');
 
     // Scroll to result
@@ -1198,7 +1198,7 @@ async function markAiApplied() {
   const card = document.getElementById('card-' + selectedJobForAI.rowIndex);
   if (card) await updateStatus(selectedJobForAI.rowIndex, 'Applied', card);
   aiStats.applied++;
-  saveAiStats();
+  saveAiStats(true); // sync to sheet
   showToast('✅', 'Marked as Applied — great work!');
   populateJobSelect();
 }
