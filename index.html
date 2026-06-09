@@ -602,6 +602,7 @@ async function doLogin() {
 
     if (result.role === 'admin') {
       currentUser = { role: 'admin', name: 'Admin' };
+      localStorage.setItem('jc_session', JSON.stringify(currentUser));
       showScreen('admin');
       renderAdminUsers();
     } else {
@@ -1014,13 +1015,15 @@ function showToast(icon, msg) {
 let aiStats = { generated: 0, applied: 0 };
 
 function loadAiStats() {
-  // Load from server data first, fallback to localStorage
+  // Always use sheet value as source of truth
+  // localStorage is only used when sheet is unavailable
   const key = 'jc_ai_stats_' + (currentUser?.id || 'guest');
-  const local = JSON.parse(localStorage.getItem(key) || '{"generated":0,"applied":0}');
   aiStats = {
-    generated: currentUser.aiGenerated || local.generated || 0,
-    applied:   currentUser.aiApplied   || local.applied   || 0
+    generated: currentUser.aiGenerated ?? 0,
+    applied:   currentUser.aiApplied   ?? 0
   };
+  // Sync localStorage to match sheet
+  localStorage.setItem(key, JSON.stringify(aiStats));
   updateAiStatsUI();
 }
 let selectedJobForAI = null;
