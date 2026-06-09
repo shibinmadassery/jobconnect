@@ -459,7 +459,7 @@ header {
         </div>
         <div style="text-align:center;padding:16px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">
           <div style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--green)" id="admin-total-applied">0</div>
-          <div style="font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-top:2px">Total Applied</div>
+          <div style="font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-top:2px">Total Jobs Applied</div>
         </div>
         <div style="text-align:center;padding:16px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">
           <div style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--blue)" id="admin-avg-rate">0%</div>
@@ -517,8 +517,8 @@ header {
             <th>Username</th>
             <th>Location</th>
             <th>Jobs Sheet</th>
-            <th>✨ Generated</th>
-            <th>✅ Applied</th>
+            <th>✨ AI Generated</th>
+            <th>✅ Total Applied</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -720,17 +720,27 @@ async function saveProfile() {
 // ══════════════════════════════════
 async function renderAdminUsers() {
   const tbody = document.getElementById('users-tbody');
-  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">Loading...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">Loading...</td></tr>';
   try {
     const result = await adminAPI({ action: 'getUsers' });
     const users = result.users || [];
+
+    // Fetch job applied counts from each user's sheet
+    const userCounts = await Promise.allSettled(
+      users.map(u => u.scriptUrl
+        ? jobsAPI(u.scriptUrl, { action: 'getJobs' }).then(r => ({ id: u.id, applied: r.counts?.applied || 0 })).catch(() => ({ id: u.id, applied: 0 }))
+        : Promise.resolve({ id: u.id, applied: 0 })
+      )
+    );
+    const countMap = {};
+    userCounts.forEach(r => { if (r.status === 'fulfilled') countMap[r.value.id] = r.value.applied; });
     if (!users.length) {
       tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">No users yet</td></tr>';
       return;
     }
     // Update summary stats
     const totalGen = users.reduce((s,u) => s + (u.aiGenerated||0), 0);
-    const totalApp = users.reduce((s,u) => s + (u.aiApplied||0), 0);
+    const totalApp = Object.values(countMap).reduce((s,v) => s + v, 0);
     const avgRate  = totalGen > 0 ? Math.round((totalApp/totalGen)*100) : 0;
     document.getElementById('admin-total-users').textContent     = users.length;
     document.getElementById('admin-total-generated').textContent = totalGen;
@@ -747,7 +757,7 @@ async function renderAdminUsers() {
           <span style="font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:var(--gold)">${u.aiGenerated || 0}</span>
         </td>
         <td style="text-align:center">
-          <span style="font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:var(--green)">${u.aiApplied || 0}</span>
+          <span style="font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:var(--green)">${countMap[u.id] || 0}</span>
         </td>
         <td><button class="btn-del" onclick="deleteUser('${esc(u.id)}','${esc(u.name)}')">Remove</button></td>
       </tr>
