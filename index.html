@@ -1203,6 +1203,40 @@ async function markAiApplied() {
   populateJobSelect();
 }
 
+// ══════════════════════════════════
+// SESSION RESTORE ON PAGE LOAD
+// ══════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('jc_session');
+  if (saved) {
+    try {
+      const user = JSON.parse(saved);
+      if (user && user.role) {
+        currentUser = user;
+        if (user.role === 'admin') {
+          showScreen('admin');
+          try { document.getElementById('admin-script-url').value = adminScriptUrl; } catch(e) {}
+          try { document.getElementById('admin-url-status').textContent = '✅ Connected'; } catch(e) {}
+          renderAdminUsers();
+        } else {
+          try { document.getElementById('user-badge').textContent = (user.name||'User').split(' ')[0]; } catch(e) {}
+          try { document.getElementById('profile-avatar').textContent = (user.name||'U').charAt(0).toUpperCase(); } catch(e) {}
+          try { document.getElementById('profile-name').value     = user.name      || ''; } catch(e) {}
+          try { document.getElementById('profile-location').value = user.location  || ''; } catch(e) {}
+          try { document.getElementById('profile-role').value     = user.role_     || ''; } catch(e) {}
+          try { document.getElementById('profile-script').value   = user.scriptUrl || ''; } catch(e) {}
+          try { document.getElementById('profile-cv').value       = user.cvUrl     || ''; } catch(e) {}
+          showScreen('dashboard');
+          loadAiStats();
+          if (user.scriptUrl) fetchJobs();
+        }
+        return;
+      }
+    } catch(e) { console.error('Session restore error:', e); }
+  }
+  showScreen('login');
+});
+
 function launchConfetti() {
   const colors = ['#c9963a','#2d6a4f','#1d3557','#9b2226'];
   for (let i=0;i<28;i++) {
