@@ -1003,10 +1003,10 @@ function renderJobs() {
       <div class="card-actions">
         ${job.url?`<a class="action-btn open-job" href="${esc(job.url)}" target="_blank" rel="noopener">🔗 Open Job</a>`:''}
         ${job.status==='Applied'
-          ? `<button class="action-btn btn-unapply" onclick="updateStatus(${job.rowIndex},'Unapplied',document.getElementById('card-${job.rowIndex}}'))">↩ Unapplied</button>`
-          : `<button class="action-btn btn-applied ${job.status==='Applied'?'is-current':''}" onclick="updateStatus(${job.rowIndex},'Applied',document.getElementById('card-${job.rowIndex}}'))">✅ Applied</button>`}
-        <button class="action-btn btn-interview ${job.status==='Interview'?'is-current':''}" onclick="updateStatus(${job.rowIndex},'Interview',document.getElementById('card-${job.rowIndex}}'))">⭐ Interview</button>
-        <button class="action-btn btn-rejected  ${job.status==='Rejected' ?'is-current':''}" onclick="updateStatus(${job.rowIndex},'Rejected', document.getElementById('card-${job.rowIndex}}'))">❌ Reject</button>
+          ? `<button class="action-btn btn-unapply" onclick="updateStatus(${job.rowIndex},'Unapplied',document.getElementById('card-${job.rowIndex}'))">↩ Unapplied</button>`
+          : `<button class="action-btn btn-applied ${job.status==='Applied'?'is-current':''}" onclick="updateStatus(${job.rowIndex},'Applied',document.getElementById('card-${job.rowIndex}'))">✅ Applied</button>`}
+        <button class="action-btn btn-interview ${job.status==='Interview'?'is-current':''}" onclick="updateStatus(${job.rowIndex},'Interview',document.getElementById('card-${job.rowIndex}'))">⭐ Interview</button>
+        <button class="action-btn btn-rejected  ${job.status==='Rejected' ?'is-current':''}" onclick="updateStatus(${job.rowIndex},'Rejected', document.getElementById('card-${job.rowIndex}'))">❌ Reject</button>
       </div>
     </div>`;
   }).join('').replace(/card-(\d+)}}/g, 'card-$1');
